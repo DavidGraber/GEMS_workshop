@@ -8,7 +8,8 @@ Before starting, create a new environment with **Python 3.10** and install the f
 
 ```bash
 # Install basic requirements
-pip install matplotlib numpy scikit-learn
+pip install matplotlib scikit-learn numpy==1.26.4
+pip install torch==2.0.1
 pip install torch_geometric
 
 # In case you want to track your training with Weights and Biases
@@ -19,8 +20,8 @@ pip install wandb
 Visit the pytorch geometric documentation page and run the installation command appropriate for your system:
 https://pytorch-geometric.readthedocs.io/en/2.4.0/install/installation.html
 ```bash
-# Example for Linux with GPU and Cuda 11.7 
-pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.0+cu117.html
+# Example for Linux with Torch 2.0.1 and Cuda 11.7 
+pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -f https://data.pyg.org/whl/torch-2.0.1+cu117.html
 ```
 
 
@@ -32,10 +33,10 @@ Download the training and testing dataset using the command below
 wget https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz
 
 # Mac
-curl https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz
+curl https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz --output GEMS_PLINDER_OOD_datasets.tar.gz
 
 # Windows
-curl https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz
+curl https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz --output GEMS_PLINDER_OOD_datasets.tar.gz
 ```
 
 Extract the datasets from the tar.gz file:
