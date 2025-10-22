@@ -4,7 +4,7 @@ import os
 import torch
 import matplotlib.pyplot as plt
 import numpy as np
-import wandb
+# import wandb
 import time
 
 from torch_geometric.data import Dataset
@@ -318,7 +318,6 @@ def main():
     edge_feat_dim = dataset[0].edge_attr.shape[1]
 
     labels = [graph.y.item() for graph in dataset]
-    print(max(labels), len(labels))
 
     # Initialize StratifiedKFold
     skf = StratifiedKFold(n_splits=n_folds, random_state=random_seed, shuffle=True)
@@ -362,7 +361,7 @@ def main():
     num_threads = int(os.environ.get('OMP_NUM_THREADS', torch.get_num_threads()))
     torch.set_num_threads(num_threads)
     device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-    print(device, torch.cuda.current_device(), torch.cuda.get_device_name())
+    print(f'Using device: {device}')
 
     # Initialize the model and optimizer
     model_class = getattr(sys.modules[__name__], args.model)
