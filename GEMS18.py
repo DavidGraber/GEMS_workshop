@@ -10,7 +10,8 @@ from torch_geometric.utils import add_self_loops
 
 '''
 This file implements the GEMS-18d architecture as described in: 
-"https://www.nature.com/articles/s42256-025-01124-5"
+"https://www.nature.com/articles/s42256-025-01124-5" with modifications 
+(no ligand embeddings used and reduced number of channels for efficiency on CPU).
 
 The implementation uses PyTorch Geometric for graph neural network components.
 
@@ -93,23 +94,23 @@ class GEMS18d(nn.Module):
         self.NodeTransform = FeatureTransformMLP(in_channels, 256, 64, dropout=dropout_prob)
         
         self.layer1 = self.build_layer( node_f=64, node_f_hidden=64, node_f_out=64, 
-                                        edge_f=edge_dim, edge_f_hidden=64, edge_f_out=64,
-                                        glob_f=384, glob_f_hidden=384, glob_f_out=384,
+                                        edge_f=edge_dim, edge_f_hidden=32, edge_f_out=32,
+                                        glob_f=256, glob_f_hidden=256, glob_f_out=256,
                                         residuals=False, dropout=conv_dropout_prob
                                         )
         
         self.node_bn1 = BatchNorm1d(64)
-        self.edge_bn1 = BatchNorm1d(64)
-        self.u_bn1 = BatchNorm1d(384)
+        self.edge_bn1 = BatchNorm1d(32)
+        self.u_bn1 = BatchNorm1d(256)
 
         self.layer2 = self.build_layer( node_f=64, node_f_hidden=64, node_f_out=64,
-                                        edge_f=64, edge_f_hidden=64, edge_f_out=64,
-                                        glob_f=384, glob_f_hidden=384, glob_f_out=384,
+                                        edge_f=32, edge_f_hidden=32, edge_f_out=32,
+                                        glob_f=256, glob_f_hidden=256, glob_f_out=256,
                                         residuals=False, dropout=conv_dropout_prob
                                         )
 
         self.dropout_layer = nn.Dropout(dropout_prob)
-        self.fc1 = nn.Linear(384, 64)
+        self.fc1 = nn.Linear(256, 64)
         self.fc2 = nn.Linear(64, 1)
 
     def build_layer(self, 
@@ -127,8 +128,9 @@ class GEMS18d(nn.Module):
         edge_index = graphbatch.edge_index
         
         x = self.NodeTransform(graphbatch.x)
+        u = torch.zeros((graphbatch.num_graphs, 256)).to(x.device)
 
-        x, edge_attr, u = self.layer1(x, edge_index, graphbatch.edge_attr, u=graphbatch.lig_emb, batch=graphbatch.batch)
+        x, edge_attr, u = self.layer1(x, edge_index, graphbatch.edge_attr, u=u, batch=graphbatch.batch)
         x = self.node_bn1(x)
         edge_attr = self.edge_bn1(edge_attr)
         u = self.u_bn1(u)
