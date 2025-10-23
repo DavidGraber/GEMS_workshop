@@ -240,6 +240,25 @@ def evaluate(Model, loader, criterion, device):
 #-------------------------------------------------------------------------------------------------------------------------------
 
 
+def plot_learning_curves(train_rmses, val_rmses, title, save_path):
+    fig = plt.figure(figsize=(10, 6))
+    epochs = range(1, len(train_rmses) + 1)
+    
+    plt.plot(epochs, train_rmses, 'b-', label='Training RMSE')
+    plt.plot(epochs, val_rmses, 'r-', label='Validation RMSE')
+    
+    plt.xlabel('Epoch')
+    plt.ylabel('RMSE')
+    plt.yscale('log')
+
+    plt.title(title)
+    plt.legend()
+    plt.grid(True)
+    
+    plt.savefig(save_path)
+    plt.close()
+
+
 def plot_predictions(train_y_true, train_y_pred, val_y_true, val_y_pred, title):
     
     axislim = 1.1
@@ -293,7 +312,7 @@ def main():
     # If no save directory is provided, save in the run_name directory
     save_dir = args.save_dir
     if not args.save_dir: 
-        save_dir = f'{run_name}'
+        save_dir = f'training_runs/{run_name}'
     if not os.path.exists(save_dir):
         os.makedirs(save_dir)
         print(f'Saving Directory generated')
@@ -467,11 +486,17 @@ def main():
     tic = time.time()
     last_saved_epoch = 0
     early_stop = False
+    train_rmses = []
+    val_rmses = []
 
     for epoch in range(epoch+1, num_epochs+1):
 
         train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred = train(Model, train_loader, criterion, optimizer, device)
         val_loss, val_r, val_rmse, val_r2, val_y_true, val_y_pred = evaluate(Model, eval_loader_val, criterion, device)
+        
+        # Track RMSE values for learning curves
+        train_rmses.append(train_rmse)
+        val_rmses.append(val_rmse)
 
         log_string = f'Epoch {epoch:05d}:  Train Loss: {train_loss:6.3f}|  Pearson:{train_r:6.3f}|  R2:{train_r2:6.3f}|  RMSE:{train_rmse:6.3f}|  -- Val Loss: {val_loss:6.3f}|  Pearson:{val_r:6.3f}|  R2:{val_r2:6.3f}|  RMSE:{val_rmse:6.3f}| '
 
@@ -500,13 +525,24 @@ def main():
             best_metrics['train'] = (train_loss, train_r, train_rmse, train_r2, train_y_true, train_y_pred)
 
         print(log_string, flush=True)
-
+        
+        if epoch % 50 == 0:
+            training_time = (time.time() - tic)/60
+            print(f'Time: {training_time:5.0f}minutes - ({(training_time/epoch):5.2f} minutes/epoch)')
+        
         if early_stopping: 
             early_stop = early_stopper.early_stop(val_rmse)
 
 
         # After regular intervals, plot the predictions of the current and the best model
         if epoch % 20 == 0 or epoch == num_epochs or early_stop:
+            # Plot learning curves
+            plot_learning_curves(
+                train_rmses,
+                val_rmses,
+                f"{run_name}: Learning Curves\nEpoch {epoch}",
+                f"{save_dir}/learning_curves.png"
+            )
 
             # If there has been a new best epoch in the last interval of epochs, plot the predictions of this model      
             if last_saved_epoch not in plotted:

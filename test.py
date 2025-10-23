@@ -159,7 +159,10 @@ def main():
     save_path = args.save_path
 
     if not save_path:
-        save_path = os.path.dirname(os.path.abspath(__file__))
+        if len(stdicts) == 1:
+            save_path = os.path.dirname(os.path.abspath(stdicts[0]))
+        else:
+            save_path = os.path.dirname(os.path.abspath(__file__))
 
     # Load the datasets
     test_dataset = torch.load(dataset_path)
