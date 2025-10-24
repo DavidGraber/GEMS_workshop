@@ -12,8 +12,8 @@ pip install matplotlib scikit-learn numpy==1.26.4
 pip install torch==2.0.1
 pip install torch_geometric
 
-# In case you want to track your training with Weights and Biases
-pip install wandb
+# To visualize the input graphs in interactive 3D plot
+pip install plotly 
 ```
 
 ### With GPU accelaration:
@@ -43,10 +43,28 @@ Extract the datasets from the tar.gz file:
 ```bash
 tar -xzvf GEMS_PLINDER_OOD_datasets.tar.gz
 ```
-This will extract the datasets and place them into a folder called "datasets"
-## Run Training
+This will extract the datasets and place them into a folder called "datasets". Each dataset (.pt file) contains a number of pytorch geometric Data() objects representing featurized graphs. Each object contains node features `x`, an `edge_index`, edge features (`edge_attr`), the datapoint label `y` and the coordinates of the graph nodes `pos` (for visualization only).
+```bash
+# Example Data() object representing a graph
+Data(x=[62, 828], edge_index=[2, 478], edge_attr=[478, 20], y=0.3700000047683716, pos=[62, 3], n_nodes=[3], id='1a4h')
+```
+- **Feature matrix** `x`: Node features for all nodes in the graph
+- **Edge index** `edge_index`: A tensor saving pairwise connections (which nodes are connected?)
+- **Edge features** `edge_attr`: The features saved in the edges of the graph
+- **Label** `y`: The binding affinity of this graph, scaled between 0 and 1
 
-The training script (`train.py`) supports various command line arguments to customize the training process. Here's how to train your model:
+
+## Visualize Graphs in 3D
+In order to visualize an example graph in an interative 3D-plot, make sure you have plotly installed (see above) and run the `visualize_graph.py` script with the path to a dataset (.pt file) as input:
+```bash
+python visualize_graph.py --dataset_path datasets/dataset_1nvq_ood_test.pt
+```
+
+
+
+## Train the GNN
+
+The training script (`train.py`) trains a graph neural network on a provided dataset. It supports various command line arguments to customize the training process. Here's how to train your model:
 
 ### Basic Training Command
 
@@ -115,21 +133,26 @@ python train.py \
 ### Training Output
 
 The training script will output:
-- Training and validation metrics for each epoch
-- A model checkpoint for the best performing model saved as `{run_name}_f{fold}_best_stdict.pt`
-- A scatter plot of true vs. predicted values for the best model
-- If wandb logging is enabled, detailed experiment tracking
+- **Training and validation metrics** for each epoch
+- **Model checkpoint** for the best performing model saved as `{run_name}_f{fold}_best_stdict.pt`
+- **True vs. predicted** scatterplot for the current best model
+- **Learning Curves:** A line plot showing the development of the training and validation loss
 
-## Test Your Model on a Test Dataset
+
+## Test Your Model
 
 After training, you can evaluate your model on test datasets using the `test.py` script:
 
 ### Basic Testing Command
-
+This will test your model on the commonly used casf2016 benchmark dataset.
 ```bash
-python test.py \
-  --stdicts my_model_f0/my_model_f0_best_stdict.pt \
-  --dataset_path datasets/dataset_casf2016.pt
+python test.py --stdicts my_model_f0/my_model_f0_best_stdict.pt --dataset_path datasets/dataset_casf2016.pt
+```
+ 
+### Testing on out-of-distribution datasets
+You can test your model on any of the challenging out-of-distribution datasets and see how well it performs on protein-ligand complexes it has never seen before.
+```bash
+python test.py --stdicts my_model_f0/my_model_f0_best_stdict.pt --dataset_path datasets/dataset_1nvq_ood_test.pt
 ```
 
 ### Testing with an Ensemble of Models
@@ -151,7 +174,7 @@ python test.py \
 
 - **Optional Parameters**:
   - `--model_arch`: Model architecture (default: "GEMS18d")
-  - `--save_path`: Directory to save test results (default: same directory as dataset)
+  - `--save_path`: Directory to save test results (default: same dir as stdict)
 
 ### Testing Output
 
@@ -159,6 +182,7 @@ The testing script will output:
 - Performance metrics (RMSE, Pearson correlation, R2)
 - A scatter plot of true vs. predicted values
 - A JSON file with predictions for each molecule in the test set
+
 
 ## Advanced Usage and Tips
 
