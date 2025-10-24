@@ -28,18 +28,21 @@ pip install pyg_lib torch_scatter torch_sparse torch_cluster torch_spline_conv -
 ## Download Dataset
 
 Download the training and testing dataset using the command below
+
+**Linux**
 ```bash
-# Linux
 wget https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz
-
-# Mac
+```
+**Mac**
+```bash
 curl https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz --output GEMS_PLINDER_OOD_datasets.tar.gz
-
-# Windows
+```
+**Windows**
+```bash
 curl https://g-95befe.765b9d.09d9.data.globus.org/GEMS_PLINDER_OOD_datasets.tar.gz --output GEMS_PLINDER_OOD_datasets.tar.gz
 ```
 
-Extract the datasets from the tar.gz file:
+### Extract the datasets and inspect
 ```bash
 tar -xzvf GEMS_PLINDER_OOD_datasets.tar.gz
 ```
