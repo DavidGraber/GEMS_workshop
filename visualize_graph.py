@@ -1,7 +1,6 @@
 import torch
 from torch_geometric.utils import remove_self_loops
 import plotly.graph_objects as go
-from plotly.offline import iplot
 import plotly.io as io
 from sklearn.neighbors import NearestNeighbors
 import torch
@@ -45,7 +44,7 @@ amino_acid_colors = {
 def parse_args():
     parser = argparse.ArgumentParser(description='Visualize a molecular graph in 3D.')
     parser.add_argument('--dataset_path', type=str, required=True, help='Path to the graph file (PyTorch Geometric format).')
-    parser.add_argument('--index', type=int, required=True, help='Index of the graph to visualize in the dataset.')
+    parser.add_argument('--index', type=int, default=0, help='Index of the graph to visualize in the dataset.')
     parser.add_argument('--title', type=str, default='Molecular Graph', help='Title of the plot.')
     args = parser.parse_args()
     return args
@@ -54,7 +53,9 @@ def main():
     args = parse_args()
     dataset = torch.load(args.dataset_path)
     graph = dataset[args.index]
+    print(f"Graph to visualize:\n{graph}")
     visualize_graph(graph, title=args.title)
+    print("Graph visualization in Browser")
 
 
 
@@ -66,9 +67,9 @@ def visualize_graph(graph,
                     show_edge_attr=False, 
                     add_traces = [], 
                     linewidth=2, 
-                    markersize=3, 
+                    markersize=10, 
                     remove_mn_edges=False,
-                    remove_noncov_edges = True):
+                    remove_noncov_edges = False):
 
     # Remove the master node edges
     if remove_mn_edges:
@@ -125,14 +126,13 @@ def visualize_graph(graph,
             hoverinfo_nodes[l] = [int(entry) if entry % 1 == 0 else round(entry,4) for entry in hoverinfo_nodes[l]]
 
     N = graph.x.shape[0]
-    print(N)
+    print(f"Number of Nodes: {N}")
 
     hoverinfo_nodes = [0 for i in range(N)]
     markercolor = [0 for i in range(N)]
     markersize = [markersize for i in range(N)]
 
     index, atomtypes = (graph.x[:,:9] == 1).nonzero(as_tuple=True) #identify the index of the first 1 in the feature matrix = atom type
-    print(atomtypes.tolist())
     for idx, atomtype in zip(index.tolist(), atomtypes.tolist()):
 
         hoverinfo_nodes[idx] = atoms[atomtype] # If the chemical element should be displayed
@@ -147,9 +147,6 @@ def visualize_graph(graph,
 
         hoverinfo_nodes[idx] = amino_acids[aa_type]# + f'({int(markersize[idx])})'
         markercolor[idx] = amino_acid_colors[aa_name]
-
-    print(markercolor)
-    print(markersize)
     #------------------------------------------------------------------------------------------------------------------------------------
 
 
@@ -170,8 +167,6 @@ def visualize_graph(graph,
     Xe=[]
     Ye=[]
     Ze=[]
-
-    #print(edges)
 
     for e in edges:
         Xe+=[atomcoords[e[0]][0],atomcoords[e[1]][0], None]# x-coordinates of edge ends
@@ -246,8 +241,7 @@ def visualize_graph(graph,
     # PLOT
     fig=go.Figure(data=data, layout=layout)
     io.renderers.default='browser'
-
-    iplot(fig, filename='3d-scatter-colorscale')
+    fig.show()
 
 
 
@@ -277,8 +271,6 @@ def graph_to_traces(graph,
             if (pair[1], pair[0]) not in edges: 
                 edges.append((pair[0], pair[1]))
                 hoverinfo_edges.append(edge_attr[idx])
-
-        print('Here')
 
         # Prepare hoverinfo as a list of lists, round floats
         hoverinfo_nodes = graph.x.tolist()
